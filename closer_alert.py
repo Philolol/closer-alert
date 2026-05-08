@@ -89,7 +89,7 @@ def fetch_fangraphs_data():
         )
         page = ctx.new_page()
         page.goto(FG_URL, wait_until="domcontentloaded", timeout=60_000)
-        page.wait_for_selector("#__NEXT_DATA__", timeout=45_000)
+        page.wait_for_selector("#__NEXT_DATA__", state="attached", timeout=45_000)
         html = page.content()
         browser.close()
 
