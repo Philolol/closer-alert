@@ -20,6 +20,7 @@ import requests
 
 FG_URL = "https://www.fangraphs.com/roster-resource/closer-depth-chart"
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
+SCRAPERAPI_KEY = os.environ.get("SCRAPERAPI_KEY", "").strip()
 
 # MLB Stats API team-name -> Fangraphs abbreviation
 MLB_TO_FG = {
@@ -60,21 +61,16 @@ IL_TOKENS = ("IL", "Day", "DL", "Susp")
 
 
 def fetch_fangraphs_data():
-    """Use Camoufox to load the depth chart and pull __NEXT_DATA__."""
-    from camoufox.sync_api import Camoufox
-
-    cf = Camoufox(headless=True, os=("windows", "macos", "linux"))
-    browser = cf.__enter__()
-    try:
-        page = browser.new_page()
-        page.goto(FG_URL, wait_until="domcontentloaded", timeout=60_000)
-        page.wait_for_selector("#__NEXT_DATA__", state="attached", timeout=45_000)
-        html = page.content()
-    finally:
-        try:
-            cf.__exit__(None, None, None)
-        except Exception:
-            pass
+    """Fetch the closer depth chart page via ScraperAPI."""
+    if not SCRAPERAPI_KEY:
+        raise RuntimeError("SCRAPERAPI_KEY environment variable is not set")
+    resp = requests.get(
+        "https://api.scraperapi.com",
+        params={"api_key": SCRAPERAPI_KEY, "url": FG_URL, "render": "true"},
+        timeout=60,
+    )
+    resp.raise_for_status()
+    html = resp.text
 
     m = re.search(
         r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
