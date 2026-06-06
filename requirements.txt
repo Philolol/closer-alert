@@ -1,2 +1,2 @@
-playwright==1.48.0
+camoufox[geoip]==0.4.11
 requests==2.32.3

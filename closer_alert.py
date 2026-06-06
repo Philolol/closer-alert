@@ -60,38 +60,14 @@ IL_TOKENS = ("IL", "Day", "DL", "Susp")
 
 
 def fetch_fangraphs_data():
-    """Use Playwright to load the depth chart and pull __NEXT_DATA__."""
-    from playwright.sync_api import sync_playwright  # lazy import for testability
+    """Use Camoufox to load the depth chart and pull __NEXT_DATA__."""
+    from camoufox.sync_api import Camoufox
 
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-            ],
-        )
-        ctx = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/131.0.0.0 Safari/537.36"
-            ),
-            viewport={"width": 1280, "height": 900},
-            locale="en-US",
-            timezone_id="America/Los_Angeles",
-        )
-        ctx.add_init_script(
-            "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});"
-            "Object.defineProperty(navigator,'languages',{get:()=>['en-US','en']});"
-            "Object.defineProperty(navigator,'plugins',{get:()=>[1,2,3,4,5]});"
-        )
-        page = ctx.new_page()
+    with Camoufox(headless=True, os=("windows", "macos", "linux")) as browser:
+        page = browser.new_page()
         page.goto(FG_URL, wait_until="domcontentloaded", timeout=60_000)
         page.wait_for_selector("#__NEXT_DATA__", state="attached", timeout=45_000)
         html = page.content()
-        browser.close()
 
     m = re.search(
         r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
