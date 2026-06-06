@@ -63,11 +63,18 @@ def fetch_fangraphs_data():
     """Use Camoufox to load the depth chart and pull __NEXT_DATA__."""
     from camoufox.sync_api import Camoufox
 
-    with Camoufox(headless=True, os=("windows", "macos", "linux")) as browser:
+    cf = Camoufox(headless=True, os=("windows", "macos", "linux"))
+    browser = cf.__enter__()
+    try:
         page = browser.new_page()
         page.goto(FG_URL, wait_until="domcontentloaded", timeout=60_000)
         page.wait_for_selector("#__NEXT_DATA__", state="attached", timeout=45_000)
         html = page.content()
+    finally:
+        try:
+            cf.__exit__(None, None, None)
+        except Exception:
+            pass
 
     m = re.search(
         r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
